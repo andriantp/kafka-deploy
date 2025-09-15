@@ -1,0 +1,56 @@
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: "kraft-cluster"
+
+  akhq:
+    image: tchiotludo/akhq:latest
+    container_name: akhq
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            my-kafka-cluster:
+              properties:
+                bootstrap.servers: "kafka:9092"
+          security:
+            default-group: no-roles
+            groups:
+              admin:
+                roles:
+                  - topic/read
+                  - topic/insert
+                  - topic/delete
+                  - topic/config/update
+                  - node/read
+                  - node/config/update
+                  - group/read
+                  - group/delete
+                  - registry/read
+                  - registry/insert
+                  - registry/update
+                  - registry/delete
+                  - registry/version/delete
+            basic-auth:
+              - username: admin
+                password: "admin123"
+                groups:
+                  - admin
+    depends_on:
+      - kafka
