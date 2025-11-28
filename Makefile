@@ -1,25 +1,32 @@
 v1 = docker/v1-docker-compose.yml
-v2 = docker/v2-docker-compose.yml
+# v2 = docker/v2-docker-compose.yml
 
-clean:
-	@echo "📋 clean"
+
+systems:
+	@echo "📋 prune systems"
 	docker system prune -a -f
-	docker volume prune -f
 
-v1-up:clean
+volumes:
+	@echo "📋 prune volumes"
+	docker volume prune -f
+	rm -rf docker/kafka
+
+up:
 	@echo "🚀 Starting v1-up"
+	mkdir docker/kafka
+	chmod -R 777 docker/kafka
 	docker compose -f $(v1) up --force-recreate -d --build
 
-v1-down:
+down:
 	@echo "✅ v1-down"
 	docker compose -f $(v1) down -v
-	$(MAKE) clean
 
-v2-up:clean
-	@echo "🚀 Starting v2-up"
-	docker compose -f $(v2) up --force-recreate -d --build
 
-v2-down:
-	@echo "✅ v2-down"
-	docker compose -f $(v2) down -v
-	$(MAKE) clean
+# v2-up:clean
+# 	@echo "🚀 Starting v2-up"
+# 	docker compose -f $(v2) up --force-recreate -d --build
+
+# v2-down:
+# 	@echo "✅ v2-down"
+# 	docker compose -f $(v2) down -v
+# 	$(MAKE) clean

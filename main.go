@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	broker = "kafka:9092" // "localhost:29092"
+	broker = "localhost:9092" 
 	topic  = "kafka-test"
 )
 

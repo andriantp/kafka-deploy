@@ -4,17 +4,32 @@ services:
     container_name: kafka
     restart: unless-stopped
     ports:
-      - "9092:9092"
-      - "9093:9093"
+      - "9092:9092"   # host
+      - "29092:29092" # container
     environment:
+      CLUSTER_ID: "kraft-cluster"
+
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_NODE_ID: 1
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      # ===== Listeners =====
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # ===== Log dirs =====
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
-      CLUSTER_ID: "kraft-cluster"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      # ===== Topic auto create =====
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - ./kafka:/tmp/kraft-combined-logs
 
   akhq:
     image: tchiotludo/akhq:latest
@@ -28,7 +43,7 @@ services:
           connections:
             my-kafka-cluster:
               properties:
-                bootstrap.servers: "kafka:9092"
+                bootstrap.servers: "kafka:29092"
           security:
             enabled: false
     depends_on:
