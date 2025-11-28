@@ -1,5 +1,5 @@
 v1 = docker/v1-docker-compose.yml
-v1 = docker/v2-docker-compose.yml
+v2 = docker/v2-docker-compose.yml
 
 clean:
 	@echo "📋 clean"
